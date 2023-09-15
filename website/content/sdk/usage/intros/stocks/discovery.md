@@ -68,8 +68,6 @@ filings.head(3)
 | 2023-01-12 13:39:25 | RYAAY    | 1038683 | 6-K         | 6-K - RYANAIR HOLDINGS PLC (0001038683) (Filer) | https://www.sec.gov/Archives/edgar/data/1038683/000165495423000350/0001654954-23-000350-index.htm |
 
 
-````
-
 ### pipo
 
 Gives information on companies that recently had an IPO (Initial Public Offering)
