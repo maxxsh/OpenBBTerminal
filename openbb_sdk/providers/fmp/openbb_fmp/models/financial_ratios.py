@@ -5,21 +5,20 @@ from concurrent.futures import ThreadPoolExecutor
 from itertools import repeat
 from typing import Any, Dict, List, Literal, Optional
 
-from openbb_provider.abstract.fetcher import Fetcher
-from openbb_provider.standard_models.base import FinancialStatementQueryParams
-from openbb_provider.standard_models.financial_ratios import FinancialRatiosData
-
 from openbb_fmp.utils.helpers import get_data_many
+from openbb_provider.abstract.fetcher import Fetcher
+from openbb_provider.standard_models.financial_ratios import (
+    FinancialRatiosData,
+    FinancialRatiosQueryParams,
+)
 
 PeriodType = Literal["annual", "quarter"]
 
 
-class FMPFinancialRatiosQueryParams(FinancialStatementQueryParams):
+class FMPFinancialRatiosQueryParams(FinancialRatiosQueryParams):
     """FMP Financial Ratios QueryParams.
 
     Source: https://financialmodelingprep.com/developer/docs/#Company-Financial-Ratios
-
-    Symbol must be provided.
     """
 
 
@@ -67,4 +66,4 @@ class FMPFinancialRatiosFetcher(
     @staticmethod
     def transform_data(data: List[Dict]) -> List[FMPFinancialRatiosData]:
         """Return the transformed data."""
-        return [FMPFinancialRatiosData(**d) for d in data]
+        return [FMPFinancialRatiosData.parse_obj(d) for d in data]

@@ -1,7 +1,8 @@
 """The OBBject."""
-from typing import Dict, Generic, List, Literal, Optional, TypeVar
+from typing import Any, Dict, Generic, List, Literal, Optional, TypeVar
 
 import pandas as pd
+from numpy import ndarray
 from pydantic import BaseModel, Field
 from pydantic.generics import GenericModel
 
@@ -13,6 +14,11 @@ from openbb_core.app.model.charts.chart import Chart
 from openbb_core.app.model.metadata import Metadata
 from openbb_core.app.provider_interface import ProviderInterface
 from openbb_core.app.utils import basemodel_to_df
+
+try:
+    from polars import DataFrame as PolarsDataFrame
+except ImportError:
+    PolarsDataFrame = Any
 
 T = TypeVar("T")
 PROVIDERS = Literal[tuple(ProviderInterface().available_providers)]  # type: ignore
@@ -56,6 +62,10 @@ class OBBject(GenericModel, Generic[T], Tagged):
             )
         )
 
+    def to_df(self) -> pd.DataFrame:
+        """Alias for `to_dataframe`."""
+        return self.to_dataframe()
+
     def to_dataframe(self) -> pd.DataFrame:
         """Convert results field to pandas dataframe.
 
@@ -80,10 +90,15 @@ class OBBject(GenericModel, Generic[T], Tagged):
         if self.results is None or self.results == []:
             raise OpenBBError("Results not found.")
 
+        if isinstance(self.results, pd.DataFrame):
+            return self.results
+
         try:
             res = self.results
 
             df = None
+
+            sort_columns = True
             if isinstance(res, list) and len(res) == 1 and isinstance(res[0], dict):
                 for r in res:
                     dict_of_df = {}
@@ -92,27 +107,46 @@ class OBBject(GenericModel, Generic[T], Tagged):
                             isinstance(nv, BaseModel) for nv in v
                         ):
                             dict_of_df[k] = basemodel_to_df(v, "date")
+                            sort_columns = False
                         else:
                             dict_of_df[k] = pd.DataFrame(v)
                     df = pd.concat(dict_of_df, axis=1)
+
             elif isinstance(res, list) and all(
                 isinstance(item, BaseModel) for item in res
             ):
                 df = basemodel_to_df(res, "date")
+                sort_columns = False
             else:
                 df = pd.DataFrame(res)
 
             if df is None:
                 raise OpenBBError("Unsupported data format.")
 
-            # Improve output so that all columns that are None are not returned
-            df.sort_index(axis=1, inplace=True)
+            # Drop columns that are all NaN, but don't rearrange columns
+            if sort_columns:
+                df.sort_index(axis=1, inplace=True)
             df = df.dropna(axis=1, how="all")
 
         except Exception as e:
             raise OpenBBError("Failed to convert results to DataFrame.") from e
 
         return df
+
+    def to_polars(self) -> PolarsDataFrame:
+        """Convert results field to polars dataframe."""
+        try:
+            from polars import from_pandas
+        except ImportError:
+            raise ImportError(
+                "Please install polars: `pip install polars`  to use this function."
+            )
+
+        return from_pandas(self.to_dataframe().reset_index())
+
+    def to_numpy(self) -> ndarray:
+        """Convert results field to numpy array."""
+        return self.to_dataframe().reset_index().to_numpy()
 
     def to_dict(self) -> Dict[str, List]:
         """Convert results field to list of values.
@@ -122,10 +156,26 @@ class OBBject(GenericModel, Generic[T], Tagged):
         Dict[str, List]
             Dictionary of lists.
         """
+        if isinstance(self.results, dict) and all(
+            isinstance(v, dict) for v in self.results.values()
+        ):
+            results: Dict[str, List] = {}
+            for _, v in self.results.items():
+                for kk, vv in v.items():
+                    if kk not in results:
+                        results[kk] = []
+                    results[kk].append(vv)
+
+            return results
+
         df = self.to_dataframe().reset_index()  # type: ignore
         results = {}
         for field in df.columns:
             results[field] = df[field].tolist()
+
+        # remove index from results
+        if "index" in results:
+            del results["index"]
 
         return results
 

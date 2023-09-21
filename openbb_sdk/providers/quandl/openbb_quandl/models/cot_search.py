@@ -8,7 +8,6 @@ from openbb_provider.standard_models.cot_search import (
     CotSearchData,
     CotSearchQueryParams,
 )
-
 from openbb_quandl.utils.series_ids import CFTC
 
 
@@ -55,4 +54,4 @@ class QuandlCotSearchFetcher(Fetcher[CotSearchQueryParams, List[QuandlCotSearchD
     def transform_data(
         data: List[Dict],
     ) -> List[QuandlCotSearchData]:
-        return [QuandlCotSearchData.parse_obj(d) for d in data]
+        return [QuandlCotSearchData(**d) for d in data]

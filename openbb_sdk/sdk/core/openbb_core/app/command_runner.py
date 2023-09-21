@@ -14,6 +14,7 @@ from openbb_core.app.logs.logging_service import LoggingService
 from openbb_core.app.model.abstract.error import OpenBBError
 from openbb_core.app.model.abstract.warning import cast_warning
 from openbb_core.app.model.command_context import CommandContext
+from openbb_core.app.model.metadata import Metadata
 from openbb_core.app.model.obbject import OBBject
 from openbb_core.app.model.system_settings import SystemSettings
 from openbb_core.app.model.user_settings import UserSettings
@@ -151,7 +152,7 @@ class ParametersBuilder:
             )
 
             if route_default:
-                return route_default.get("provider", None) or command_cov_provider
+                return route_default.get("provider", None) or command_cov_provider  # type: ignore
 
             return command_cov_provider
 
@@ -366,12 +367,16 @@ class StaticCommandRunner:
         duration = perf_counter_ns() - start_ns
 
         if execution_context.user_settings.preferences.metadata:
-            obbject.metadata = {  # type: ignore
-                "arguments": kwargs,
-                "duration": duration,
-                "route": route,
-                "timestamp": timestamp,
-            }
+            try:
+                obbject.metadata = Metadata(
+                    arguments=kwargs,
+                    duration=duration,
+                    route=route,
+                    timestamp=timestamp,
+                )
+            except Exception as e:
+                if Env().DEBUG_MODE:
+                    raise OpenBBError(e) from e
 
         return obbject
 

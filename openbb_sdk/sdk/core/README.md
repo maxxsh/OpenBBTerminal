@@ -23,7 +23,9 @@
     - [4.1.5. Environment variables](#415-environment-variables)
   - [4.2 Dynamic version](#42-dynamic-version)
   - [5. REST API](#5-rest-api)
-  - [5.1 Test users](#51-test-users)
+    - [5.1 HTTPS](#51-https)
+    - [5.2 Docker](#52-docker)
+    - [5.3 Test users](#53-test-users)
   - [6. Front-end typing](#6-front-end-typing)
 
 ## 1. Introduction
@@ -145,7 +147,7 @@ Update your system settings by modifying the `.openbb_sdk/system_settings.json` 
 
 ```{json}
 {
-    "dbms_uri": null
+    "test_mode": true
 }
 ```
 
@@ -161,7 +163,7 @@ output = obb.stocks.load(
     start_date="2023-01-01",
     provider="fmp",
     chart=True
-    )
+)
 ```
 
 ### 4.1.1. OBBject
@@ -367,18 +369,18 @@ In fact, the static version makes use of this feature to run each command. Take 
 >>> from openbb_core.app.command_runner import CommandRunner
 >>> runner = CommandRunner()
 >>> output = runner.run(
-             "/stocks/load",
-             provider_choices={
-                 "provider": "fmp",
-             },
-             standard_params={
-                 "symbol": "TSLA",
-                 "start_date": "2023-07-01",
-                 "end_date": "2023-07-25",
-             },
-             extra_params={},
-             chart=True,
-         )
+    "/stocks/load",
+    provider_choices={
+        "provider": "fmp",
+    },
+    standard_params={
+        "symbol": "TSLA",
+        "start_date": "2023-07-01",
+        "end_date": "2023-07-25",
+    },
+    extra_params={},
+    chart=True,
+)
 >>> output
 OBBject
 
@@ -398,7 +400,66 @@ OpenBB SDK comes with a ready to use Rest API built with FastAPI. Start the appl
 uvicorn openbb_core.api.rest_api:app --reload
 ```
 
-## 5.1 Test users
+### 5.1 HTTPS
+
+If you want to run your FastAPI app over HTTPS locally you can use [mkcert](https://github.com/FiloSottile/mkcert) and pass the certificate and key to `uvicorn`.
+
+0. Install `mkcert` (see instructions [here](https://github.com/FiloSottile/mkcert))
+1. cd into "openbb_sdk/sdk/core/openbb_core/api"
+2. Run the following commands:
+
+    ```shell
+    mkcert -install
+    mkcert localhost 127.0.0.1 ::1
+    ```
+
+    You will see two files created in the current directory.
+    - Certificate: "localhost+2.pem"
+    - Key: "localhost+2-key.pem"
+
+3. Change the code to start the server inside "rest_api.py" to:
+
+    ```python
+    if __name__ == "__main__":
+        import uvicorn
+
+        uvicorn.run(
+            "openbb_core.api.rest_api:app",
+            reload=True,
+            ssl_keyfile="./localhost+2-key.pem",
+            ssl_certfile="./localhost+2.pem",
+        )
+    ```
+
+4. Run the server from the terminal with:
+
+    ```shell
+    python rest_api.py
+    ```
+
+    Your app will be available at https://127.0.0.1:8000/
+
+### 5.2 Docker
+
+You can use the API through Docker.
+
+We provide a `.dockerfile`` in OpenBB [repo](https://github.com/OpenBB-finance/OpenBBTerminal).
+
+To build the image, you can run the following command from the repo root:
+
+```bash
+docker build -f build/docker/api.dockerfile -t openbb-sdk:latest .
+```
+
+To run this newly-built image:
+
+```bash
+docker run --rm -p 8000:8000 -v ~/.openbb_sdk:/root/.openbb_sdk openbb-sdk:latest
+```
+
+This will mount the local `~/.openbb_sdk` directory into the Docker container so you can use the API keys from there and it will expose the API on port `8000`.
+
+### 5.3 Test users
 
 There are 2 default users for testing purpose:
 

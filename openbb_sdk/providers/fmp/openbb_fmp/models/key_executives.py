@@ -4,14 +4,13 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
+from openbb_fmp.utils.helpers import get_data_many
 from openbb_provider.abstract.fetcher import Fetcher
 from openbb_provider.standard_models.key_executives import (
     KeyExecutivesData,
     KeyExecutivesQueryParams,
 )
 from pydantic import validator
-
-from openbb_fmp.utils.helpers import get_data_many
 
 
 class FMPKeyExecutivesQueryParams(KeyExecutivesQueryParams):
@@ -60,4 +59,4 @@ class FMPKeyExecutivesFetcher(
     @staticmethod
     def transform_data(data: List[Dict]) -> List[FMPKeyExecutivesData]:
         """Return the transformed data."""
-        return [FMPKeyExecutivesData(**d) for d in data]
+        return [FMPKeyExecutivesData.parse_obj(d) for d in data]

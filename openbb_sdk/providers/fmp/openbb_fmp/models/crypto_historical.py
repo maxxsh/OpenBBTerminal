@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from dateutil.relativedelta import relativedelta
+from openbb_fmp.utils.helpers import get_data_many
 from openbb_provider.abstract.fetcher import Fetcher
 from openbb_provider.standard_models.crypto_historical import (
     CryptoHistoricalData,
@@ -12,8 +13,6 @@ from openbb_provider.standard_models.crypto_historical import (
 )
 from openbb_provider.utils.helpers import get_querystring
 from pydantic import Field, NonNegativeInt, validator
-
-from openbb_fmp.utils.helpers import get_data_many
 
 
 class FMPCryptoHistoricalQueryParams(CryptoHistoricalQueryParams):
@@ -43,11 +42,11 @@ class FMPCryptoHistoricalData(CryptoHistoricalData):
         alias="change",
     )
     changePercent: float = Field(
-        description=r"Change \% in the price of the symbol.", alias="change_percent"
+        description=r"Change % in the price of the symbol.", alias="change_percent"
     )
     label: str = Field(description="Human readable format of the date.")
     changeOverTime: float = Field(
-        description=r"Change \% in the price of the symbol over a period of time.",
+        description=r"Change % in the price of the symbol over a period of time.",
         alias="change_over_time",
     )
 
@@ -76,6 +75,7 @@ class FMPCryptoHistoricalFetcher(
 
         if params.get("end_date") is None:
             transformed_params["end_date"] = now
+
         return FMPCryptoHistoricalQueryParams(**transformed_params)
 
     @staticmethod
@@ -97,4 +97,4 @@ class FMPCryptoHistoricalFetcher(
     @staticmethod
     def transform_data(data: List[Dict]) -> List[FMPCryptoHistoricalData]:
         """Return the transformed data."""
-        return [FMPCryptoHistoricalData(**d) for d in data]
+        return [FMPCryptoHistoricalData.parse_obj(d) for d in data]

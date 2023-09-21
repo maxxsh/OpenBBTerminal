@@ -3,13 +3,12 @@
 
 from typing import Any, Dict, List, Optional
 
+from openbb_fmp.utils.helpers import create_url, get_data_many
 from openbb_provider.abstract.fetcher import Fetcher
 from openbb_provider.standard_models.historical_employees import (
     HistoricalEmployeesData,
     HistoricalEmployeesQueryParams,
 )
-
-from openbb_fmp.utils.helpers import create_url, get_data_many
 
 
 class FMPHistoricalEmployeesQueryParams(HistoricalEmployeesQueryParams):
@@ -52,4 +51,4 @@ class FMPHistoricalEmployeesFetcher(
     @staticmethod
     def transform_data(data: List[Dict]) -> List[FMPHistoricalEmployeesData]:
         """Return the transformed data."""
-        return [FMPHistoricalEmployeesData(**d) for d in data]
+        return [FMPHistoricalEmployeesData.parse_obj(d) for d in data]

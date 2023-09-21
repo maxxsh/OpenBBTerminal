@@ -3,14 +3,13 @@
 
 from typing import Any, Dict, List, Optional
 
+from openbb_intrinio.utils.helpers import get_data_many
 from openbb_provider.abstract.fetcher import Fetcher
 from openbb_provider.standard_models.forex_pairs import (
     ForexPairsData,
     ForexPairsQueryParams,
 )
 from pydantic import Field
-
-from openbb_intrinio.utils.helpers import get_data_many
 
 
 class IntrinioForexPairsQueryParams(ForexPairsQueryParams):
@@ -70,4 +69,4 @@ class IntrinioForexPairsFetcher(
     def transform_data(data: List[Dict]) -> List[IntrinioForexPairsData]:
         """Return the transformed data."""
 
-        return [IntrinioForexPairsData(**d) for d in data]
+        return [IntrinioForexPairsData.parse_obj(d) for d in data]

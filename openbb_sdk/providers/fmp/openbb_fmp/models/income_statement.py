@@ -7,14 +7,13 @@ from datetime import (
 )
 from typing import Any, Dict, List, Literal, Optional
 
+from openbb_fmp.utils.helpers import get_data_many
 from openbb_provider.abstract.fetcher import Fetcher
 from openbb_provider.standard_models.income_statement import (
     IncomeStatementData,
     IncomeStatementQueryParams,
 )
 from pydantic import Field, root_validator
-
-from openbb_fmp.utils.helpers import get_data_many
 
 PeriodType = Literal["annual", "quarter"]
 
@@ -141,7 +140,7 @@ class FMPIncomeStatementFetcher(
         """Return the raw data from the FMP endpoint."""
         api_key = credentials.get("fmp_api_key") if credentials else ""
 
-        symbol = query.symbol or query.cik
+        symbol = query.symbol
         base_url = "https://financialmodelingprep.com/api/v3"
 
         url = (
@@ -154,4 +153,4 @@ class FMPIncomeStatementFetcher(
     @staticmethod
     def transform_data(data: List[Dict]) -> List[FMPIncomeStatementData]:
         """Return the transformed data."""
-        return [FMPIncomeStatementData(**d) for d in data]
+        return [FMPIncomeStatementData.parse_obj(d) for d in data]

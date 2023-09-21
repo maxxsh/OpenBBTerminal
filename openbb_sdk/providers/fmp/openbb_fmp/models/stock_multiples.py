@@ -3,13 +3,12 @@
 
 from typing import Any, Dict, List, Optional
 
+from openbb_fmp.utils.helpers import create_url, get_data_many
 from openbb_provider.abstract.fetcher import Fetcher
 from openbb_provider.standard_models.stock_multiples import (
     StockMultiplesData,
     StockMultiplesQueryParams,
 )
-
-from openbb_fmp.utils.helpers import create_url, get_data_many
 
 
 class FMPStockMultiplesQueryParams(StockMultiplesQueryParams):
@@ -63,4 +62,4 @@ class FMPStockMultiplesFetcher(
     @staticmethod
     def transform_data(data: List[Dict]) -> List[FMPStockMultiplesData]:
         """Return the transformed data."""
-        return [FMPStockMultiplesData(**d) for d in data]
+        return [FMPStockMultiplesData.parse_obj(d) for d in data]

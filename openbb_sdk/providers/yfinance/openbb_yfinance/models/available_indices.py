@@ -8,9 +8,8 @@ from openbb_provider.standard_models.available_indices import (
     AvailableIndicesData,
     AvailableIndicesQueryParams,
 )
-from pydantic import Field
-
 from openbb_yfinance.utils.references import INDICES
+from pydantic import Field
 
 
 class YFinanceAvailableIndicesQueryParams(AvailableIndicesQueryParams):
@@ -23,9 +22,7 @@ class YFinanceAvailableIndicesData(AvailableIndicesData):
     code: str = Field(
         description="ID code for keying the index in the OpenBB Terminal."
     )
-    symbol: str = Field(
-        description="yFinance ticker symbol for the index.", alias="ticker"
-    )
+    symbol: str = Field(description="Symbol for the index.", alias="ticker")
 
 
 class YFinanceAvailableIndicesFetcher(
@@ -55,4 +52,4 @@ class YFinanceAvailableIndicesFetcher(
     @staticmethod
     def transform_data(data: List[Dict]) -> List[YFinanceAvailableIndicesData]:
         """Return the transformed data."""
-        return [YFinanceAvailableIndicesData(**d) for d in data]
+        return [YFinanceAvailableIndicesData.parse_obj(d) for d in data]

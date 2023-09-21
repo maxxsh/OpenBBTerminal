@@ -7,14 +7,13 @@ from datetime import (
 )
 from typing import Any, Dict, List, Optional
 
+from openbb_fmp.utils.helpers import create_url, get_data_many
 from openbb_provider.abstract.fetcher import Fetcher
 from openbb_provider.standard_models.share_statistics import (
     ShareStatisticsData,
     ShareStatisticsQueryParams,
 )
 from pydantic import validator
-
-from openbb_fmp.utils.helpers import create_url, get_data_many
 
 
 class FMPShareStatisticsQueryParams(ShareStatisticsQueryParams):
@@ -64,4 +63,4 @@ class FMPShareStatisticsFetcher(
     @staticmethod
     def transform_data(data: List[Dict]) -> List[FMPShareStatisticsData]:
         """Return the transformed data."""
-        return [FMPShareStatisticsData(**d) for d in data]
+        return [FMPShareStatisticsData.parse_obj(d) for d in data]

@@ -3,13 +3,12 @@
 
 from typing import Any, Dict, Optional
 
+from openbb_fmp.utils.helpers import create_url, get_data_one
 from openbb_provider.abstract.fetcher import Fetcher
 from openbb_provider.standard_models.stock_peers import (
     StockPeersData,
     StockPeersQueryParams,
 )
-
-from openbb_fmp.utils.helpers import create_url, get_data_one
 
 # FMP SPECIFIC FUNCTIONALITY CURRENTLY
 
@@ -53,4 +52,4 @@ class FMPStockPeersFetcher(
     @staticmethod
     def transform_data(data: Dict) -> FMPStockPeersData:
         """Return the transformed data."""
-        return FMPStockPeersData(**data)
+        return FMPStockPeersData.parse_obj(data)

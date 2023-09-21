@@ -3,14 +3,13 @@
 
 from typing import Any, Dict, List, Optional
 
+from openbb_fmp.utils.helpers import get_data_many
 from openbb_provider.abstract.fetcher import Fetcher
 from openbb_provider.standard_models.forex_pairs import (
     ForexPairsData,
     ForexPairsQueryParams,
 )
 from pydantic import Field
-
-from openbb_fmp.utils.helpers import get_data_many
 
 
 class FMPForexPairsQueryParams(ForexPairsQueryParams):
@@ -65,4 +64,4 @@ class FMPForexPairsFetcher(
     @staticmethod
     def transform_data(data: List[Dict]) -> List[FMPForexPairsData]:
         """Return the transformed data."""
-        return [FMPForexPairsData(**d) for d in data]
+        return [FMPForexPairsData.parse_obj(d) for d in data]

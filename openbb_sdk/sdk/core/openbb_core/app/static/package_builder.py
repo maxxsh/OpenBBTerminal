@@ -58,12 +58,24 @@ class PackageBuilder:
         self.verbose = verbose
         self.console = Console(verbose)
 
+    def clean_package(self, modules: Optional[Union[str, List[str]]] = None) -> None:
+        """Delete the package folder or modules before building."""
+        if modules:
+            for module in modules:
+                module_path = self.directory / "package" / f"{module}.py"
+                if module_path.exists():
+                    module_path.unlink()
+        else:
+            shutil.rmtree(self.directory / "package", ignore_errors=True)
+
     def build(
         self,
         modules: Optional[Union[str, List[str]]] = None,
     ) -> None:
         """Build the extensions for the SDK."""
         self.console.log("\nBuilding extensions package...\n")
+
+        self.clean_package(modules)
 
         self.save_extension_map()
         self.save_module_map()
@@ -320,6 +332,7 @@ class DocstringGenerator:
             "    metadata: Optional[Metadata]\n"
             "        Metadata info about the command execution.\n"
         )
+        obbject_description = obbject_description.replace("NoneType", "None")
 
         return obbject_description
 
@@ -333,6 +346,16 @@ class DocstringGenerator:
         returns: dict,
     ) -> str:
         """Create the docstring for model."""
+
+        def format_type(type_: str, char_limit: Optional[int] = None) -> str:
+            """Format type in docstrings"""
+            type_str = str(type_)
+            type_str = type_str.replace("NoneType", "None")
+            if char_limit:
+                type_str = type_str[:char_limit] + (
+                    "..." if len(str(type_str)) > char_limit else ""
+                )
+            return type_str
 
         standard_dict = params["standard"].__dataclass_fields__
         extra_dict = params["extra"].__dataclass_fields__
@@ -363,14 +386,16 @@ class DocstringGenerator:
                 type_ = ""
                 description = ""
 
-            docstring += f"{param_name} : {type_}\n"
+            type_str = format_type(type_, char_limit=79)
+            docstring += f"{param_name} : {type_str}\n"
             docstring += f"    {description}\n"
 
         # Kwargs
         for param_name, param in extra_dict.items():
             p_type = param.type
             type_ = p_type.__name__ if inspect.isclass(p_type) else p_type
-            docstring += f"{param_name} : {type_}\n"
+            type_str = format_type(type_)
+            docstring += f"{param_name} : {type_str}\n"
             docstring += f"    {param.default.description}\n"
 
         # Returns
@@ -610,10 +635,6 @@ class MethodDefinition:
             item_type = get_args(get_type_hints(return_type)["results"])[0]
             if item_type.__module__ == "builtins":
                 func_returns = f"OBBject[{item_type.__name__}]"
-            # elif get_origin(item_type) == list:
-            #     inner_type = get_args(item_type)[0]
-            #     select = f"[{inner_type.__module__}.{inner_type.__name__}]"
-            #     func_returns = f"OBBject[{item_type.__module__}.{item_type.__name__}[{select}]]"
             else:
                 inner_type_name = (
                     item_type.__name__

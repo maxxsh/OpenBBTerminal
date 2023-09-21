@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Literal, Optional
 
 from dateutil.relativedelta import relativedelta
+from openbb_fmp.utils.helpers import get_data_many
 from openbb_provider.abstract.fetcher import Fetcher
 from openbb_provider.standard_models.stock_historical import (
     StockHistoricalData,
@@ -11,8 +12,6 @@ from openbb_provider.standard_models.stock_historical import (
 )
 from openbb_provider.utils.helpers import get_querystring
 from pydantic import Field, NonNegativeInt, validator
-
-from openbb_fmp.utils.helpers import get_data_many
 
 
 class FMPStockHistoricalQueryParams(StockHistoricalQueryParams):
@@ -26,7 +25,7 @@ class FMPStockHistoricalQueryParams(StockHistoricalQueryParams):
     )
     interval: Literal[
         "1min", "5min", "15min", "30min", "1hour", "4hour", "1day"
-    ] = Field(default="1day", description="Interval of the data to fetch.")
+    ] = Field(default="1day", description="Data granularity.")
 
 
 class FMPStockHistoricalData(StockHistoricalData):
@@ -40,14 +39,14 @@ class FMPStockHistoricalData(StockHistoricalData):
         description="Change in the price of the symbol from the previous day."
     )
     changePercent: Optional[float] = Field(
-        description=r"Change \% in the price of the symbol."
+        description=r"Change % in the price of the symbol."
     )
     vwap: Optional[float] = Field(
         description="Volume Weighted Average Price of the symbol."
     )
     label: Optional[str] = Field(description="Human readable format of the date.")
     changeOverTime: Optional[float] = Field(
-        description=r"Change \% in the price of the symbol over a period of time."
+        description=r"Change % in the price of the symbol over a period of time."
     )
 
     @validator("date", pre=True, check_fields=False)
@@ -108,4 +107,4 @@ class FMPStockHistoricalFetcher(
     @staticmethod
     def transform_data(data: List[Dict]) -> List[FMPStockHistoricalData]:
         """Return the transformed data."""
-        return [FMPStockHistoricalData(**d) for d in data]
+        return [FMPStockHistoricalData.parse_obj(d) for d in data]

@@ -5,14 +5,13 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from dateutil.relativedelta import relativedelta
+from openbb_fmp.utils.helpers import get_data_many, get_querystring
 from openbb_provider.abstract.fetcher import Fetcher
 from openbb_provider.standard_models.forex_historical import (
     ForexHistoricalData,
     ForexHistoricalQueryParams,
 )
 from pydantic import Field, validator
-
-from openbb_fmp.utils.helpers import get_data_many, get_querystring
 
 
 class FMPForexHistoricalQueryParams(ForexHistoricalQueryParams):
@@ -36,11 +35,11 @@ class FMPForexHistoricalData(ForexHistoricalData):
         alias="change",
     )
     changePercent: float = Field(
-        description=r"Change \% in the price of the symbol.", alias="change_percent"
+        description=r"Change % in the price of the symbol.", alias="change_percent"
     )
     label: str = Field(description="Human readable format of the date.")
     changeOverTime: float = Field(
-        description=r"Change \% in the price of the symbol over a period of time.",
+        description=r"Change % in the price of the symbol over a period of time.",
         alias="change_over_time",
     )
 
@@ -91,4 +90,4 @@ class FMPForexHistoricalFetcher(
     @staticmethod
     def transform_data(data: List[Dict]) -> List[FMPForexHistoricalData]:
         """Return the transformed data."""
-        return [FMPForexHistoricalData(**d) for d in data]
+        return [FMPForexHistoricalData.parse_obj(d) for d in data]

@@ -4,14 +4,13 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
+from openbb_fmp.utils.helpers import get_data_many, get_querystring
 from openbb_provider.abstract.fetcher import Fetcher
 from openbb_provider.standard_models.stock_quote import (
     StockQuoteData,
     StockQuoteQueryParams,
 )
 from pydantic import Field, validator
-
-from openbb_fmp.utils.helpers import get_data_many, get_querystring
 
 
 class FMPStockQuoteQueryParams(StockQuoteQueryParams):
@@ -112,4 +111,4 @@ class FMPStockQuoteFetcher(
     @staticmethod
     def transform_data(data: List[Dict]) -> List[FMPStockQuoteData]:
         """Return the transformed data."""
-        return [FMPStockQuoteData(**d) for d in data]
+        return [FMPStockQuoteData.parse_obj(d) for d in data]
