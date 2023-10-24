@@ -57,6 +57,7 @@ export default function NavbarContent() {
           <div className="flex items-center">
             <NavbarColorModeToggle />
             {!searchBarItem && (
+              // this component styles brake navbar__items--right structure on @media (max-width: 996px) with  position: absolute;
               <NavbarSearch>
                 <SearchBar />
               </NavbarSearch>
